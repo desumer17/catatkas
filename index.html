@@ -4,14 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CatatKas - Cloud Sync</title>
+    
+    <!-- PWA Meta Tags agar tampil seperti App Android -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CatatKas">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2563eb">
+    
+    <!-- Link Ikon Aplikasi -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2910/2910311.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2910/2910311.png">
+
+    <!-- Web App Manifest (Inline) untuk identitas App di HP -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJnameIjogIkNhdGF0S2FzIiwKICAic2hvcnRfbmFtZSI6ICJDYXRhdEthcyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiaW5kZXgiOiAiaW5kZXguaHRtbCIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzI1NjNlYiIsCiAgInRoZW1lX2NvbG9yIjogIiMyNTYzZWIiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8yOTEwLzI5MTAzMTEucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-header { background: rgba(37, 99, 235, 0.95); backdrop-filter: blur(8px); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+        .glass-header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
         .locked { overflow: hidden; height: 100vh; }
         .loader { border-top-color: #3b82f6; animation: spinner 0.6s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        * { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-24 locked">
@@ -35,6 +51,7 @@
                 <div id="dot-6" class="h-3 w-3 rounded-full border-2 border-white/50 mx-auto"></div>
             </div>
             <div class="grid grid-cols-3 gap-4">
+                <!-- Tombol Angka PIN -->
                 <button onclick="inputPin('1')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">1</button>
                 <button onclick="inputPin('2')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">2</button>
                 <button onclick="inputPin('3')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">3</button>
@@ -60,12 +77,12 @@
                     <p class="text-blue-100 text-xs opacity-70 mt-1" id="current-period-label">Memuat...</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="fetchFromCloud()" class="bg-white/20 p-2 rounded-xl">
+                    <button onclick="fetchFromCloud()" class="bg-white/20 p-2 rounded-xl active:bg-white/40">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                     </button>
-                    <button onclick="lockApp()" class="bg-white/20 p-2 rounded-xl">
+                    <button onclick="lockApp()" class="bg-white/20 p-2 rounded-xl active:bg-white/40">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
@@ -73,39 +90,41 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="text-blue-100 text-sm opacity-80">Saldo Akhir Kumulatif</p>
+                <p class="text-blue-100 text-sm opacity-80">Saldo Kumulatif</p>
                 <h2 class="text-4xl font-extrabold tracking-tight" id="total-balance">Rp 0</h2>
             </div>
             <div class="grid grid-cols-2 gap-4 mt-8 pt-5 border-t border-white/20">
                 <div class="bg-white/10 p-3 rounded-2xl text-center">
-                    <p class="text-[10px] uppercase opacity-70 font-bold mb-1">Masuk Bulan Ini</p>
+                    <p class="text-[10px] uppercase opacity-70 font-bold mb-1 tracking-wider">Masuk Bulan Ini</p>
                     <p class="text-base font-bold text-emerald-300" id="month-in">Rp 0</p>
                 </div>
                 <div class="bg-white/10 p-3 rounded-2xl text-center">
-                    <p class="text-[10px] uppercase opacity-70 font-bold mb-1">Keluar Bulan Ini</p>
+                    <p class="text-[10px] uppercase opacity-70 font-bold mb-1 tracking-wider">Keluar Bulan Ini</p>
                     <p class="text-base font-bold text-rose-300" id="month-out">Rp 0</p>
                 </div>
             </div>
         </div>
 
+        <!-- Filter Periode -->
         <div class="px-6 mt-6 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Periode:</label>
-                <input type="month" id="filter-month" onchange="updateUI()" class="bg-slate-100 border-none text-slate-600 text-sm font-bold rounded-xl p-2 outline-none">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Bulan:</label>
+                <input type="month" id="filter-month" onchange="updateUI()" class="bg-slate-100 border-none text-slate-700 text-xs font-extrabold rounded-lg p-2 outline-none">
             </div>
         </div>
 
         <div class="p-6">
-            <div class="bg-slate-50 border border-slate-100 p-5 rounded-[2.5rem] mb-8">
-                <h3 id="form-title" class="font-bold text-slate-800 mb-4 flex justify-between items-center text-lg">
+            <!-- Form Input -->
+            <div class="bg-slate-50 border border-slate-100 p-5 rounded-[2.5rem] mb-8 shadow-inner">
+                <h3 id="form-title" class="font-bold text-slate-800 mb-4 flex justify-between items-center text-base">
                     Input Transaksi
-                    <button id="cancel-edit" onclick="resetForm()" class="hidden text-xs bg-rose-100 text-rose-600 px-3 py-1 rounded-full font-bold">Batal</button>
+                    <button id="cancel-edit" onclick="resetForm()" class="hidden text-[10px] bg-rose-100 text-rose-600 px-3 py-1 rounded-full font-bold uppercase">Batal Edit</button>
                 </h3>
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Tanggal</label>
-                            <input type="date" id="t-date" class="w-full p-3 bg-white rounded-2xl border border-slate-200 shadow-sm text-sm">
+                            <input type="date" id="t-date" class="w-full p-3 bg-white rounded-2xl border border-slate-200 shadow-sm text-sm font-medium">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Nominal</label>
@@ -114,22 +133,22 @@
                     </div>
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Keterangan</label>
-                        <input type="text" id="t-desc" placeholder="Isi catatan..." class="w-full p-3 bg-white rounded-2xl border border-slate-200 shadow-sm text-sm">
+                        <input type="text" id="t-desc" placeholder="Contoh: Gaji, Makan, Bensin..." class="w-full p-3 bg-white rounded-2xl border border-slate-200 shadow-sm text-sm">
                     </div>
                     <div class="grid grid-cols-2 gap-4 pt-2">
-                        <button onclick="saveToCloud('IN')" id="btn-in" class="bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-100 active:scale-95 text-sm uppercase">Dana Masuk</button>
-                        <button onclick="saveToCloud('OUT')" id="btn-out" class="bg-rose-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-rose-100 active:scale-95 text-sm uppercase">Pengeluaran</button>
+                        <button onclick="saveToCloud('IN')" id="btn-in" class="bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-100 active:scale-95 text-xs uppercase tracking-widest">Dana Masuk</button>
+                        <button onclick="saveToCloud('OUT')" id="btn-out" class="bg-rose-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-rose-100 active:scale-95 text-xs uppercase tracking-widest">Pengeluaran</button>
                     </div>
                 </div>
             </div>
 
-            <h3 class="font-bold text-slate-800 text-lg mb-4 px-2">Riwayat Transaksi</h3>
+            <h3 class="font-bold text-slate-800 text-lg mb-4 px-2 tracking-tight">Riwayat Transaksi</h3>
             <div id="transaction-list" class="space-y-3 pb-10"></div>
         </div>
     </div>
 
     <script>
-        // TEMPEL URL APPS SCRIPT ANDA DI SINI
+        // URL SCRIPT ANDA
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwiKSUdRHExo6dd_z03wf5TckjDNSUVJRevpoVBBLFdU1LFVf1X2KnPHU5zp2wUd4TW6g/exec"; 
 
         let currentPin = "";
@@ -143,10 +162,10 @@
             document.getElementById('filter-month').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
         };
 
-        // --- AUTH LOGIC ---
+        // --- PIN LOGIC ---
         function inputPin(d) { if(currentPin.length < 6) { currentPin += d; updateDots(); if(currentPin.length === 6) setTimeout(checkPin, 200); } }
         function clearPin() { currentPin = ""; updateDots(); }
-        function updateDots() { for(let i=1; i<=6; i++) document.getElementById(`dot-${i}`).className = i <= currentPin.length ? "h-3 w-3 rounded-full bg-white mx-auto" : "h-3 w-3 rounded-full border-2 border-white/50 mx-auto"; }
+        function updateDots() { for(let i=1; i<=6; i++) document.getElementById(`dot-${i}`).className = i <= currentPin.length ? "h-3 w-3 rounded-full bg-white mx-auto shadow-sm" : "h-3 w-3 rounded-full border-2 border-white/40 mx-auto"; }
         function checkPin() { if(currentPin === CORRECT_PIN) unlockApp(); else { alert("PIN Salah!"); clearPin(); } }
         function unlockApp() { 
             document.getElementById('auth-overlay').style.transform = 'translateY(-100%)'; 
@@ -156,27 +175,25 @@
         }
         function lockApp() { currentPin = ""; updateDots(); document.getElementById('auth-overlay').style.transform = 'translateY(0)'; document.getElementById('main-app').style.opacity = '0'; document.body.classList.add('locked'); }
 
-        // --- CLOUD LOGIC ---
+        // --- DATA LOGIC ---
         async function fetchFromCloud() {
-            if (!SCRIPT_URL.startsWith("https")) {
-                console.warn("URL Script belum diisi. Aplikasi berjalan mode lokal.");
-                return;
-            }
             toggleLoading(true);
             try {
                 const res = await fetch(SCRIPT_URL);
-                transactions = await res.json();
+                const data = await res.json();
+                transactions = data.map(item => ({...item, amount: parseInt(item.amount)}));
                 updateUI();
-            } catch (e) { alert("Gagal mengambil data dari cloud."); }
+            } catch (e) { console.error(e); }
             toggleLoading(false);
         }
 
         async function saveToCloud(type) {
-            const amount = parseInt(document.getElementById('t-amount').value.replace(/\D/g, '')) || 0;
+            const amountInput = document.getElementById('t-amount').value.replace(/\D/g, '');
+            const amount = parseInt(amountInput) || 0;
             const desc = document.getElementById('t-desc').value;
             const date = document.getElementById('t-date').value;
 
-            if (!desc || amount <= 0 || !date) return alert("Lengkapi data!");
+            if (!desc || amount <= 0 || !date) return alert("Lengkapi data transaksi!");
 
             const payload = {
                 action: editId ? 'edit' : 'add',
@@ -184,22 +201,12 @@
                 date, description: desc, amount, type
             };
 
-            if (!SCRIPT_URL.startsWith("https")) {
-                // Mode Lokal jika URL kosong
-                if(editId) transactions = transactions.map(t => t.id === editId ? payload : t);
-                else transactions.unshift(payload);
-                updateUI(); resetForm(); return;
-            }
-
             toggleLoading(true);
             try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 await fetchFromCloud();
                 resetForm();
-            } catch (e) { alert("Gagal menyimpan ke cloud."); }
+            } catch (e) { alert("Error menyimpan data."); }
             toggleLoading(false);
         }
 
@@ -237,10 +244,9 @@
 
             transactions.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(t => {
                 const isIn = t.type === 'IN';
-                totalBal += isIn ? parseInt(t.amount) : -parseInt(t.amount);
-
+                totalBal += isIn ? t.amount : -t.amount;
                 if (t.date.startsWith(filterMonth)) {
-                    if (isIn) mIn += parseInt(t.amount); else mOut += parseInt(t.amount);
+                    if (isIn) mIn += t.amount; else mOut += t.amount;
                 }
             });
 
@@ -254,26 +260,26 @@
             const filtered = transactions.filter(t => t.date.startsWith(filterMonth)).sort((a,b) => new Date(b.date) - new Date(a.date));
             
             if(filtered.length === 0) {
-                list.innerHTML = "<div class='text-center py-10 text-slate-400 italic text-sm'>Tidak ada data periode ini</div>";
+                list.innerHTML = "<div class='text-center py-10 text-slate-300 italic text-sm font-medium'>Belum ada transaksi bulan ini</div>";
                 return;
             }
 
             filtered.forEach(t => {
                 const isIn = t.type === 'IN';
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-4 bg-white border border-slate-100 rounded-3xl shadow-sm active:scale-[0.98] transition-all";
+                div.className = "flex items-center justify-between p-4 bg-white border border-slate-100 rounded-[1.8rem] shadow-sm active:scale-[0.97] transition-all cursor-pointer";
                 div.onclick = () => startEdit(t.id);
                 div.innerHTML = `
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white ${isIn ? 'bg-emerald-500' : 'bg-rose-500'}">
+                        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg ${isIn ? 'bg-emerald-500' : 'bg-rose-500'}">
                             ${isIn ? '↓' : '↑'}
                         </div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm">${t.description}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">${t.date}</p>
+                        <div class="max-w-[120px]">
+                            <p class="font-bold text-slate-800 text-sm truncate">${t.description}</p>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">${t.date}</p>
                         </div>
                     </div>
-                    <p class="font-extrabold text-sm ${isIn ? 'text-emerald-600' : 'text-rose-600'}">${isIn ? '+' : '-'} ${formatIDR(t.amount)}</p>
+                    <p class="font-extrabold text-sm whitespace-nowrap ${isIn ? 'text-emerald-600' : 'text-rose-600'}">${isIn ? '+' : '-'} ${formatIDR(t.amount)}</p>
                 `;
                 list.appendChild(div);
             });
