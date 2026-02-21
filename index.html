@@ -2,155 +2,194 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatatKas - Cloud Sync</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CatatKas</title>
     
-    <!-- PWA Meta Tags agar tampil seperti App Android -->
+    <!-- PWA Meta Tags untuk Native Look -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CatatKas">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2563eb">
     
-    <!-- Link Ikon Aplikasi -->
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2910/2910311.png">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2910/2910311.png">
+    <!-- Ikon Aplikasi -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/10434/10434441.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/10434/10434441.png">
 
-    <!-- Web App Manifest (Inline) untuk identitas App di HP -->
-    <link rel="manifest" href="data:application/json;base64,ewogICJnameIjogIkNhdGF0S2FzIiwKICAic2hvcnRfbmFtZSI6ICJDYXRhdEthcyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiaW5kZXgiOiAiaW5kZXguaHRtbCIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzI1NjNlYiIsCiAgInRoZW1lX2NvbG9yIjogIiMyNTYzZWIiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8yOTEwLzI5MTAzMTEucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
+    <!-- Manifest JSON (Diperbaiki agar Ikon Muncul di Android) -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"CatatKas Pro","short_name":"CatatKas","start_url":"index.html","display":"standalone","background_color":"#2563eb","theme_color":"#2563eb","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/10434/10434441.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; }
-        .glass-header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
-        .locked { overflow: hidden; height: 100vh; }
-        .loader { border-top-color: #3b82f6; animation: spinner 0.6s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        :root {
+            --safe-top: env(safe-area-inset-top);
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-font-smoothing: antialiased; 
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .glass-header { 
+            background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
+            padding-top: calc(1.5rem + var(--safe-top));
+        }
+
+        .locked { overflow: hidden; height: 100vh; position: fixed; width: 100%; }
+        
+        .loader { 
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Mencegah highlight biru saat klik di HP */
         * { -webkit-tap-highlight-color: transparent; }
+
+        .app-card {
+            border-radius: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-24 locked">
     
     <!-- LOADING OVERLAY -->
-    <div id="loading-overlay" class="hidden fixed inset-0 z-[110] bg-white/70 flex items-center justify-center">
-        <div class="loader w-12 h-12 border-4 border-slate-200 rounded-full"></div>
+    <div id="loading-overlay" class="hidden fixed inset-0 z-[110] bg-white/80 backdrop-blur-sm flex items-center justify-center">
+        <div class="text-center">
+            <div class="loader mx-auto mb-4"></div>
+            <p class="text-blue-600 font-bold text-sm tracking-wider">MENYINKRONKAN...</p>
+        </div>
     </div>
 
     <!-- LAYAR KEAMANAN (PIN) -->
-    <div id="auth-overlay" class="fixed inset-0 z-[100] bg-blue-600 flex items-center justify-center p-6 transition-all duration-500">
+    <div id="auth-overlay" class="fixed inset-0 z-[100] bg-blue-600 flex items-center justify-center p-6 transition-all duration-700 ease-in-out">
         <div class="w-full max-w-xs text-center">
-            <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tighter">CatatKas</h1>
-            <p class="text-blue-100 text-sm mb-8">Masukkan PIN Keamanan</p>
-            <div class="grid grid-cols-6 gap-2 mb-10 justify-center max-w-[200px] mx-auto">
-                <div id="dot-1" class="h-3 w-3 rounded-full border-2 border-white/50 mx-auto"></div>
-                <div id="dot-2" class="h-3 w-3 rounded-full border-2 border-white/50 mx-auto"></div>
-                <div id="dot-3" class="h-3 w-3 rounded-full border-2 border-white/50 mx-auto"></div>
-                <div id="dot-4" class="h-3 w-3 rounded-full border-2 border-white/50 mx-auto"></div>
-                <div id="dot-5" class="h-3 w-3 rounded-full border-2 border-white/50 mx-auto"></div>
-                <div id="dot-6" class="h-3 w-3 rounded-full border-2 border-white/50 mx-auto"></div>
+            <div class="mb-8">
+                <div class="w-20 h-20 bg-white/20 rounded-3xl mx-auto flex items-center justify-center mb-4 shadow-xl backdrop-blur-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h1 class="text-4xl font-extrabold text-white mb-1 tracking-tighter">CatatKas</h1>
+                <p class="text-blue-100 text-sm opacity-80">Gunakan PIN untuk masuk</p>
             </div>
-            <div class="grid grid-cols-3 gap-4">
-                <!-- Tombol Angka PIN -->
-                <button onclick="inputPin('1')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">1</button>
-                <button onclick="inputPin('2')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">2</button>
-                <button onclick="inputPin('3')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">3</button>
-                <button onclick="inputPin('4')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">4</button>
-                <button onclick="inputPin('5')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">5</button>
-                <button onclick="inputPin('6')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">6</button>
-                <button onclick="inputPin('7')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">7</button>
-                <button onclick="inputPin('8')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">8</button>
-                <button onclick="inputPin('9')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">9</button>
-                <button onclick="clearPin()" class="h-16 w-16 mx-auto flex items-center justify-center text-white/70 text-sm font-bold rounded-full">Hapus</button>
-                <button onclick="inputPin('0')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 hover:bg-white/20 text-white text-2xl font-bold rounded-full transition-all active:scale-90">0</button>
-                <button onclick="checkPin()" class="h-16 w-16 mx-auto flex items-center justify-center bg-emerald-500 text-white text-sm font-bold rounded-full shadow-lg">OK</button>
+            
+            <div class="flex justify-center gap-3 mb-12">
+                <div id="dot-1" class="h-4 w-4 rounded-full border-2 border-white/30 transition-all duration-300"></div>
+                <div id="dot-2" class="h-4 w-4 rounded-full border-2 border-white/30 transition-all duration-300"></div>
+                <div id="dot-3" class="h-4 w-4 rounded-full border-2 border-white/30 transition-all duration-300"></div>
+                <div id="dot-4" class="h-4 w-4 rounded-full border-2 border-white/30 transition-all duration-300"></div>
+                <div id="dot-5" class="h-4 w-4 rounded-full border-2 border-white/30 transition-all duration-300"></div>
+                <div id="dot-6" class="h-4 w-4 rounded-full border-2 border-white/30 transition-all duration-300"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-y-6 gap-x-4">
+                <button onclick="inputPin('1')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">1</button>
+                <button onclick="inputPin('2')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">2</button>
+                <button onclick="inputPin('3')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">3</button>
+                <button onclick="inputPin('4')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">4</button>
+                <button onclick="inputPin('5')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">5</button>
+                <button onclick="inputPin('6')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">6</button>
+                <button onclick="inputPin('7')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">7</button>
+                <button onclick="inputPin('8')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">8</button>
+                <button onclick="inputPin('9')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">9</button>
+                <button onclick="clearPin()" class="h-16 w-16 mx-auto flex items-center justify-center text-white/50 text-sm font-bold uppercase tracking-widest">Hapus</button>
+                <button onclick="inputPin('0')" class="h-16 w-16 mx-auto flex items-center justify-center bg-white/10 text-white text-3xl font-semibold rounded-full active:bg-white/40 active:scale-90 transition-all">0</button>
+                <button onclick="checkPin()" class="h-16 w-16 mx-auto flex items-center justify-center bg-emerald-500 text-white text-sm font-black rounded-full shadow-2xl active:scale-95">OK</button>
             </div>
         </div>
     </div>
 
     <!-- MAIN APP CONTENT -->
-    <div id="main-app" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-2xl relative opacity-0 transition-opacity duration-500">
-        <div class="glass-header sticky top-0 z-20 p-6 text-white rounded-b-[2.5rem] shadow-xl">
-            <div class="flex justify-between items-start mb-4">
+    <div id="main-app" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-2xl relative opacity-0 transition-opacity duration-700">
+        <div class="glass-header sticky top-0 z-20 px-6 pb-8 text-white rounded-b-[3rem] shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tighter">CatatKas</h1>
-                    <p class="text-blue-100 text-xs opacity-70 mt-1" id="current-period-label">Memuat...</p>
+                    <h1 class="text-3xl font-black tracking-tighter">CatatKas</h1>
+                    <p class="text-blue-100 text-xs font-bold uppercase tracking-widest opacity-80" id="current-period-label">Memuat...</p>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="fetchFromCloud()" class="bg-white/20 p-2 rounded-xl active:bg-white/40">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
+                <div class="flex gap-3">
+                    <button onclick="fetchFromCloud()" class="bg-white/20 p-3 rounded-2xl active:bg-white/40 active:scale-90 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                     </button>
-                    <button onclick="lockApp()" class="bg-white/20 p-2 rounded-xl active:bg-white/40">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
+                    <button onclick="lockApp()" class="bg-white/20 p-3 rounded-2xl active:bg-white/40 active:scale-90 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                     </button>
                 </div>
             </div>
-            <div class="mt-4">
-                <p class="text-blue-100 text-sm opacity-80">Saldo Kumulatif</p>
-                <h2 class="text-4xl font-extrabold tracking-tight" id="total-balance">Rp 0</h2>
+            
+            <div class="mb-2">
+                <p class="text-blue-100/70 text-xs font-bold uppercase tracking-[0.2em] mb-1">Saldo Tersedia</p>
+                <h2 class="text-4xl font-black tracking-tight flex items-baseline gap-1" id="total-balance">Rp 0</h2>
             </div>
-            <div class="grid grid-cols-2 gap-4 mt-8 pt-5 border-t border-white/20">
-                <div class="bg-white/10 p-3 rounded-2xl text-center">
-                    <p class="text-[10px] uppercase opacity-70 font-bold mb-1 tracking-wider">Masuk Bulan Ini</p>
-                    <p class="text-base font-bold text-emerald-300" id="month-in">Rp 0</p>
+
+            <div class="grid grid-cols-2 gap-3 mt-8">
+                <div class="bg-emerald-400/20 backdrop-blur-md p-4 rounded-3xl border border-white/10">
+                    <p class="text-[9px] uppercase font-black text-emerald-200 tracking-wider mb-1">Pemasukan</p>
+                    <p class="text-sm font-extrabold text-white" id="month-in">Rp 0</p>
                 </div>
-                <div class="bg-white/10 p-3 rounded-2xl text-center">
-                    <p class="text-[10px] uppercase opacity-70 font-bold mb-1 tracking-wider">Keluar Bulan Ini</p>
-                    <p class="text-base font-bold text-rose-300" id="month-out">Rp 0</p>
+                <div class="bg-rose-400/20 backdrop-blur-md p-4 rounded-3xl border border-white/10">
+                    <p class="text-[9px] uppercase font-black text-rose-200 tracking-wider mb-1">Pengeluaran</p>
+                    <p class="text-sm font-extrabold text-white" id="month-out">Rp 0</p>
                 </div>
             </div>
         </div>
 
-        <!-- Filter Periode -->
-        <div class="px-6 mt-6 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Bulan:</label>
-                <input type="month" id="filter-month" onchange="updateUI()" class="bg-slate-100 border-none text-slate-700 text-xs font-extrabold rounded-lg p-2 outline-none">
-            </div>
+        <!-- Filter -->
+        <div class="px-6 py-4 flex items-center justify-between mt-2">
+            <h3 class="font-extrabold text-slate-800 text-lg tracking-tight">Transaksi</h3>
+            <input type="month" id="filter-month" onchange="updateUI()" class="bg-slate-100 border-none text-blue-600 text-xs font-black rounded-xl px-3 py-2 outline-none">
         </div>
 
-        <div class="p-6">
-            <!-- Form Input -->
-            <div class="bg-slate-50 border border-slate-100 p-5 rounded-[2.5rem] mb-8 shadow-inner">
-                <h3 id="form-title" class="font-bold text-slate-800 mb-4 flex justify-between items-center text-base">
-                    Input Transaksi
-                    <button id="cancel-edit" onclick="resetForm()" class="hidden text-[10px] bg-rose-100 text-rose-600 px-3 py-1 rounded-full font-bold uppercase">Batal Edit</button>
+        <div class="px-6 pb-24">
+            <!-- Form Card -->
+            <div class="bg-white app-card border border-slate-100 p-6 mb-8 shadow-xl">
+                <h3 id="form-title" class="font-bold text-slate-800 mb-5 flex justify-between items-center text-sm uppercase tracking-widest">
+                    Input Baru
+                    <button id="cancel-edit" onclick="resetForm()" class="hidden bg-rose-50 text-rose-500 px-3 py-1 rounded-full text-[10px] font-black uppercase">Batal</button>
                 </h3>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Tanggal</label>
-                            <input type="date" id="t-date" class="w-full p-3 bg-white rounded-2xl border border-slate-200 shadow-sm text-sm font-medium">
+                
+                <div class="space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">Tanggal</label>
+                            <input type="date" id="t-date" class="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-xs focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Nominal</label>
-                            <input type="tel" id="t-amount" oninput="formatDisplayAmount(this)" placeholder="0" class="w-full p-3 bg-white rounded-2xl border border-slate-200 shadow-sm font-bold text-sm">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">Nominal</label>
+                            <input type="tel" id="t-amount" oninput="formatDisplayAmount(this)" placeholder="0" class="w-full p-4 bg-slate-50 rounded-2xl border-none font-black text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Keterangan</label>
-                        <input type="text" id="t-desc" placeholder="Contoh: Gaji, Makan, Bensin..." class="w-full p-3 bg-white rounded-2xl border border-slate-200 shadow-sm text-sm">
+                    
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">Keterangan</label>
+                        <input type="text" id="t-desc" placeholder="Gaji, Belanja, Makan..." class="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-xs focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
+
                     <div class="grid grid-cols-2 gap-4 pt-2">
-                        <button onclick="saveToCloud('IN')" id="btn-in" class="bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-100 active:scale-95 text-xs uppercase tracking-widest">Dana Masuk</button>
-                        <button onclick="saveToCloud('OUT')" id="btn-out" class="bg-rose-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-rose-100 active:scale-95 text-xs uppercase tracking-widest">Pengeluaran</button>
+                        <button onclick="saveToCloud('IN')" id="btn-in" class="bg-emerald-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-200 active:scale-95 text-[10px] uppercase tracking-widest">Dana Masuk</button>
+                        <button onclick="saveToCloud('OUT')" id="btn-out" class="bg-rose-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-rose-200 active:scale-95 text-[10px] uppercase tracking-widest">Keluar</button>
                     </div>
                 </div>
             </div>
 
-            <h3 class="font-bold text-slate-800 text-lg mb-4 px-2 tracking-tight">Riwayat Transaksi</h3>
-            <div id="transaction-list" class="space-y-3 pb-10"></div>
+            <!-- List -->
+            <div id="transaction-list" class="space-y-3"></div>
         </div>
     </div>
 
     <script>
-        // URL SCRIPT ANDA
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwiKSUdRHExo6dd_z03wf5TckjDNSUVJRevpoVBBLFdU1LFVf1X2KnPHU5zp2wUd4TW6g/exec"; 
-
         let currentPin = "";
         const CORRECT_PIN = "123456";
         let transactions = [];
@@ -162,20 +201,48 @@
             document.getElementById('filter-month').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
         };
 
-        // --- PIN LOGIC ---
-        function inputPin(d) { if(currentPin.length < 6) { currentPin += d; updateDots(); if(currentPin.length === 6) setTimeout(checkPin, 200); } }
+        // --- AUTH ---
+        function inputPin(d) { 
+            if(currentPin.length < 6) { 
+                currentPin += d; 
+                updateDots(); 
+                if(currentPin.length === 6) setTimeout(checkPin, 200); 
+            } 
+        }
         function clearPin() { currentPin = ""; updateDots(); }
-        function updateDots() { for(let i=1; i<=6; i++) document.getElementById(`dot-${i}`).className = i <= currentPin.length ? "h-3 w-3 rounded-full bg-white mx-auto shadow-sm" : "h-3 w-3 rounded-full border-2 border-white/40 mx-auto"; }
-        function checkPin() { if(currentPin === CORRECT_PIN) unlockApp(); else { alert("PIN Salah!"); clearPin(); } }
+        function updateDots() { 
+            for(let i=1; i<=6; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i <= currentPin.length) {
+                    dot.className = "h-4 w-4 rounded-full bg-white mx-auto shadow-[0_0_10px_white]";
+                } else {
+                    dot.className = "h-4 w-4 rounded-full border-2 border-white/30 mx-auto";
+                }
+            }
+        }
+        function checkPin() { 
+            if(currentPin === CORRECT_PIN) unlockApp(); 
+            else { 
+                alert("PIN SALAH"); 
+                clearPin(); 
+            } 
+        }
+        
         function unlockApp() { 
-            document.getElementById('auth-overlay').style.transform = 'translateY(-100%)'; 
-            document.getElementById('main-app').style.opacity = '1'; 
-            document.body.classList.remove('locked');
+            document.getElementById('auth-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('main-app').style.opacity = '1'; 
+                document.body.classList.remove('locked');
+            }, 500);
             fetchFromCloud(); 
         }
-        function lockApp() { currentPin = ""; updateDots(); document.getElementById('auth-overlay').style.transform = 'translateY(0)'; document.getElementById('main-app').style.opacity = '0'; document.body.classList.add('locked'); }
+        
+        function lockApp() { 
+            location.reload(); // Hard lock dengan refresh
+        }
 
-        // --- DATA LOGIC ---
+        // --- DATA ---
         async function fetchFromCloud() {
             toggleLoading(true);
             try {
@@ -183,7 +250,7 @@
                 const data = await res.json();
                 transactions = data.map(item => ({...item, amount: parseInt(item.amount)}));
                 updateUI();
-            } catch (e) { console.error(e); }
+            } catch (e) { alert("Koneksi gagal"); }
             toggleLoading(false);
         }
 
@@ -192,34 +259,27 @@
             const amount = parseInt(amountInput) || 0;
             const desc = document.getElementById('t-desc').value;
             const date = document.getElementById('t-date').value;
-
-            if (!desc || amount <= 0 || !date) return alert("Lengkapi data transaksi!");
-
-            const payload = {
-                action: editId ? 'edit' : 'add',
-                id: editId || Date.now().toString(),
-                date, description: desc, amount, type
-            };
-
+            if (!desc || amount <= 0 || !date) return;
+            
+            const payload = { action: editId ? 'edit' : 'add', id: editId || Date.now().toString(), date, description: desc, amount, type };
             toggleLoading(true);
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 await fetchFromCloud();
                 resetForm();
-            } catch (e) { alert("Error menyimpan data."); }
+            } catch (e) { alert("Gagal menyimpan"); }
             toggleLoading(false);
         }
 
-        // --- UI HELPERS ---
         function toggleLoading(show) { document.getElementById('loading-overlay').classList.toggle('hidden', !show); }
         function formatDisplayAmount(input) { let v = input.value.replace(/\D/g, ""); input.value = v ? new Intl.NumberFormat('id-ID').format(v) : ""; }
         function formatIDR(n) { return "Rp" + new Intl.NumberFormat('id-ID').format(n); }
-
+        
         function resetForm() {
             editId = null;
             document.getElementById('t-desc').value = "";
             document.getElementById('t-amount').value = "";
-            document.getElementById('form-title').firstChild.textContent = "Input Transaksi";
+            document.getElementById('form-title').firstChild.textContent = "Input Baru";
             document.getElementById('cancel-edit').classList.add('hidden');
         }
 
@@ -239,15 +299,12 @@
             const list = document.getElementById('transaction-list');
             const filterMonth = document.getElementById('filter-month').value;
             list.innerHTML = "";
-
             let totalBal = 0, mIn = 0, mOut = 0;
 
             transactions.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(t => {
                 const isIn = t.type === 'IN';
                 totalBal += isIn ? t.amount : -t.amount;
-                if (t.date.startsWith(filterMonth)) {
-                    if (isIn) mIn += t.amount; else mOut += t.amount;
-                }
+                if (t.date.startsWith(filterMonth)) { if (isIn) mIn += t.amount; else mOut += t.amount; }
             });
 
             document.getElementById('total-balance').innerText = formatIDR(totalBal);
@@ -260,26 +317,32 @@
             const filtered = transactions.filter(t => t.date.startsWith(filterMonth)).sort((a,b) => new Date(b.date) - new Date(a.date));
             
             if(filtered.length === 0) {
-                list.innerHTML = "<div class='text-center py-10 text-slate-300 italic text-sm font-medium'>Belum ada transaksi bulan ini</div>";
+                list.innerHTML = `
+                    <div class="text-center py-12 bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
+                        <p class="text-slate-300 font-bold text-xs uppercase tracking-widest">Kosong</p>
+                    </div>
+                `;
                 return;
             }
 
             filtered.forEach(t => {
                 const isIn = t.type === 'IN';
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-4 bg-white border border-slate-100 rounded-[1.8rem] shadow-sm active:scale-[0.97] transition-all cursor-pointer";
+                div.className = "flex items-center justify-between p-5 bg-white rounded-[1.8rem] shadow-sm border border-slate-50 active:scale-[0.97] transition-all cursor-pointer";
                 div.onclick = () => startEdit(t.id);
                 div.innerHTML = `
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg ${isIn ? 'bg-emerald-500' : 'bg-rose-500'}">
-                            ${isIn ? '↓' : '↑'}
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner ${isIn ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}">
+                            ${isIn ? '￬' : '￪'}
                         </div>
-                        <div class="max-w-[120px]">
-                            <p class="font-bold text-slate-800 text-sm truncate">${t.description}</p>
-                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">${t.date}</p>
+                        <div class="max-w-[140px]">
+                            <p class="font-bold text-slate-800 text-sm truncate tracking-tight">${t.description}</p>
+                            <p class="text-[9px] text-slate-400 font-black uppercase tracking-tighter">${t.date}</p>
                         </div>
                     </div>
-                    <p class="font-extrabold text-sm whitespace-nowrap ${isIn ? 'text-emerald-600' : 'text-rose-600'}">${isIn ? '+' : '-'} ${formatIDR(t.amount)}</p>
+                    <div class="text-right">
+                        <p class="font-black text-sm ${isIn ? 'text-emerald-500' : 'text-rose-500'}">${isIn ? '+' : '-'} ${formatIDR(t.amount)}</p>
+                    </div>
                 `;
                 list.appendChild(div);
             });
